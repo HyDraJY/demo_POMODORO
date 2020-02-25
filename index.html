@@ -1,0 +1,301 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>番茄鐘</title>
+  <link href="https://fonts.googleapis.com/css?family=Noto+Sans+TC&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="./style.css">
+</head>
+
+<body>
+  <div id="app">
+
+    <div class="bg_imgs">
+      <img class="img1 imgs" src="./images/Intersection 1.png">
+      <img class="img2 imgs" src="./images/Intersection 2.png">
+      <img class="img3 imgs" src="./images/Subtraction 4.png">
+      <!-- <img class="img4 imgs" src="./images/Subtraction 5.png" :class='{move:move}'> -->
+      <div class="img4 imgs" :class='{move:move}'></div>
+    </div>
+
+
+    <div class="container">
+
+
+      <div class="header">
+        <div class="title">
+          <div class="pic">
+            <img src="./images/Group 1.png" alt="">
+            <h3>| <span>To-Do-List Alarm System</span></h3>
+          </div>
+        </div>
+
+        <div class="menu">
+          <div class="burger_container" @click='moveHandler'>
+            <div class="burger"></div>
+          </div>
+        </div>
+      </div>
+
+
+      <div class="wrap">
+        <div class="item left" :class='{move:move}'>
+          <div class="input">
+            <input type="text" placeholder="Add a new mission..." v-model='newMission' @keyup.enter='addMission'>
+          </div>
+          <div class="txt"><span @click='addMission'>+</span></div>
+        </div>
+
+        <div class="item mid" :class='{move:move}'>
+          <div class="clock" id="clock">
+            <div class="mission_title">
+              <h2>{{ getMissionName }}</h2>
+            </div>
+            <div class="timer">
+              <h1>{{ timeLeft }}</h1>
+            </div>
+            <div class="icon">
+              <img src="./images/Group 32.png">
+              <img src="./images/Group 33.png" @click='countDown' v-if='!isCounting'>
+              <img src="./images/Group 38.png" v-if='isCounting' @click='stopHandler'>
+              <img src="./images/Group 34.png" @click='nextHandler(current+1)'>
+            </div>
+
+          </div>
+        </div>
+
+        <div class="item right" :class='{move:move}'>
+          <div class="icon_container">
+            <div class="icon ">
+              <a href="javascript:;" @click='clickHandler(1)' :class='{current:state===1}'><img
+                  src="./images/Group 13.png"></a>
+            </div>
+            <div class="icon ">
+              <a href="javascript:;" @click='clickHandler(2)' :class='{current:state===2}'><img
+                  src="./images/Path 17.png"></a>
+            </div>
+            <div class="icon ">
+              <a href="javascript:;" @click='clickHandler(3)' :class='{current:state===3}'><img
+                  src="./images/Group 14.png"></a>
+            </div>
+          </div>
+        </div>
+
+
+        <div class="info" :class='{hide:state!==1}'>
+          <div class="input">
+            <input type="text" placeholder="Add a new mission...">
+          </div>
+          <div class="txt"><a href="#">+</a></div>
+
+          <div class="date">
+            <div class="pic">
+              <img src="./images/Path 14.png" alt="">
+            </div>
+            <div class="txt">
+              <p>Jan, 04, 2020</p>
+            </div>
+          </div>
+
+          <div class="list">
+            <ul>
+              <li v-for='(item, index) in list' @click='completeHandler(index)' :class='{toggle:item.complete}'>
+                {{ item.name }}
+              </li>
+            </ul>
+          </div>
+        </div>
+        <div class="analyze" :class='{hide:state!==2}'>
+          <div class="board">
+            <div class="item">
+              <p>Today</p>
+              <h3>7</h3>
+            </div>
+            <div class="item">
+              <p>Weekly</p>
+              <h3>60</h3>
+            </div>
+            <div class="item">
+              <p>Totally</p>
+              <h3>102</h3>
+            </div>
+          </div>
+        </div>
+        <div class="setting" :class='{hide:state!==3}'>
+          <div class="setting_time">
+            <p>Time Setting</p>
+            <div class="wrap">
+              <div class="block">
+                <div class="txt">
+                  <p>Working time</p>
+                </div>
+                <div class="select">
+                  <select name="working_time" id="working_time">
+                    <option value="1">25min</option>
+                    <option value="2">40min</option>
+                  </select>
+                </div>
+              </div>
+              <div class="block">
+                <p>Resting time</p>
+                <div class="select">
+                  <select name="resting_time" id="resting_time">
+                    <option value="1">5min</option>
+                    <option value="2">15min</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="alarm">
+            <p>Alarm</p>
+            <div class="wrap">
+              <div class="block">
+                <p>Volume</p>
+                <div class="btn"><a href="#"><img src="./images/Group 39.png" alt=""></a></div>
+              </div>
+              <div class="block">
+                <p>Audio</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+
+      </div>
+
+
+      <div class="next">
+        <h3>Next: <span>feed the cat the cat the cat</span></h3>
+      </div>
+
+
+    </div>
+  </div>
+  <script src='https://cdnjs.cloudflare.com/ajax/libs/vue/2.6.11/vue.js'></script>
+  <script src='https://cdnjs.cloudflare.com/ajax/libs/progressbar.js/1.1.0/progressbar.js'></script>
+  <script>
+
+
+    let storageKey = 'tomatoClock'
+    let timer = null
+    let data = {
+      list: [],
+      current: 0,
+      newMission: '',
+      initTime: 1500,
+      time: 0,
+      isCounting: false,
+      state: 0,
+      move: false,
+    }
+
+
+
+    new Vue({
+      el: '#app',
+      data,
+      computed: {
+        getMissionName() {
+          return this.list[this.current] ? this.list[this.current].name : ''
+        },
+        timeLeft() {
+          let min = Math.round(this.time / 60)
+          let sec = Math.round(this.time % 60)
+          if (sec < 10) return `${min}:0${sec}`
+          return `${min}:${sec}`
+        }
+      },
+      methods: {
+
+        completeHandler(index) {
+          this.list[index].complete = !this.list[index].complete
+        },
+        nextHandler(index) {
+          if (!this.isCounting) {
+            this.current = (index + this.list.length) % this.list.length
+            this.time = this.initTime
+          }
+        },
+        moveHandler() {
+          this.move = false
+          this.state = 0
+        },
+        clickHandler(index) {
+          this.move = true
+          if (index === 1) this.state = 1
+          else if (index === 2) this.state = 2
+          else this.state = 3
+        },
+        addMission() {
+          if (this.newMission.length) {
+            this.list.push({ name: this.newMission, complete: false })
+            // localstorage只能放字串 要記得先stringify處理過
+            localStorage.setItem(storageKey, JSON.stringify(this.list))
+            this.newMission = ''
+          }
+        },
+        countDown() {
+          if (!this.isCounting && this.time !== 0) {
+            this.setTimer()
+            this.isCounting = true
+          }
+        },
+        setTimer() {
+          this.clearTimer()
+          timer = setTimeout(this.timerHandler, 1000);
+        },
+        timerHandler() {
+          if (this.time === 0) {
+            this.list[this.current].complete = true
+            this.isCounting = false
+            bar.set(0)
+            return this.clearTimer()
+          }
+          this.time -= 1
+          this.setTimer()
+        },
+        clearTimer() {
+          clearTimeout(timer)
+        },
+        stopHandler() {
+          this.clearTimer()
+          this.isCounting = false
+        }
+      },
+      mounted() {
+        this.list = JSON.parse(localStorage.getItem(storageKey))
+        this.time = this.initTime
+      },
+      beforeDestroy() {
+        this.clearTimer()
+      },
+      watch: {
+        isCounting: function (val) {
+          if (val === true) {
+            bar.animate(1)  // Number from 0.0 to 1.0
+          }
+          else {
+            bar.pause()
+          }
+        }
+      }
+    })
+
+    var bar = new ProgressBar.Circle(clock, {
+      strokeWidth: 1,
+      easing: 'linear',
+      duration: 1000 * data.time,
+      color: 'rgb(242,240,201)',
+      trailColor: 'rgba(242,240,201,.35)',
+      trailWidth: 1,
+      svgStyle: null
+    });
+
+  </script>
+</body>
+
+</html>
